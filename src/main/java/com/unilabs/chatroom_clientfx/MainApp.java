@@ -16,6 +16,16 @@ public class MainApp extends Application {
 
     private Chat model;
 
+    /**
+     *
+     * @param primaryStage the primary stage for this application, onto which
+     * the application scene can be set.
+     * Applications may create other stages, if needed, but they will not be
+     * primary stages.
+     *
+     * Here are the properties that describes where can we poll data
+     * In this case, the program depends on the RaquelAPI implementation
+     */
     @Override
     public void start(Stage primaryStage) {
         // Configuration (could be read from args or config file)
@@ -73,10 +83,14 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Used by JavaFX to exit application and end JVM session
+     * @throws Exception
+     */
     @Override
     public void stop() throws Exception {
         // This is called by JavaFX when the application exits (e.g., Platform.exit())
-        // Ensure model shutdown is called if not handled by onCloseRequest
+        // We need to ensure model shutdown is called if not handled by onCloseRequest
         System.out.println("Application stop() method called.");
         if (model != null) {
             model.shutdown();
@@ -84,7 +98,10 @@ public class MainApp extends Application {
         super.stop();
     }
 
-
+    /**
+     * The start point, just that
+     * @param args used by JVM
+     */
     public static void main(String[] args) {
         launch(args);
     }

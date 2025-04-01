@@ -3,6 +3,10 @@ package com.unilabs.chatroom_clientfx.model.dto;
 import org.json.JSONObject;
 
 // Using a standard DTO class for relay messages
+
+/**
+ * Class that represents a message (any type) sent or received from the relay
+ */
 public class RelayMessageDTO {
     private String sender;
     private String recipient;
@@ -23,6 +27,12 @@ public class RelayMessageDTO {
     public String getType() { return type; }
 
     // Method to convert DTO to JSON for sending
+
+    /**
+     * Convert string data to JSON payload to be sent
+     *
+     * @return the JSON data
+     */
     public String toJsonString() {
         JSONObject payload = new JSONObject();
         payload.put("sender", sender);
@@ -32,7 +42,12 @@ public class RelayMessageDTO {
         return payload.toString();
     }
 
-    // Static factory method to parse from received JSON (optional but useful)
+    /**
+     * Static factory method to parse from received JSON
+     *
+     * @param json the JSON object with payload
+     * @return String data
+     */
     public static RelayMessageDTO fromJson(JSONObject json) {
         if (json == null) return null;
         try {

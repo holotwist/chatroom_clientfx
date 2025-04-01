@@ -8,7 +8,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-// Using a Record for immutable server information
+/**
+ * Using a Record for immutable server information
+ *
+ * @param uuid Unique ID for identification
+ * @param name Optional room name
+ * @param host Address of host
+ * @param port Port of host
+ * @param supportedMethods How can we connect to the server, it can be Direct, Relayed or None
+ */
 public record ServerInfo(String uuid, String name, String host, int port, List<String> supportedMethods) {
 
     // Constructor with validation/defensive copying
@@ -36,7 +44,12 @@ public record ServerInfo(String uuid, String name, String host, int port, List<S
         return name + " (" + String.join("/", supportedMethods) + ")";
     }
 
-    // Parse the server list
+    /**
+     * Parse the server list
+     *
+     * @param jsonString JSON data into String datatype
+     * @return List with available servers from Discovery
+     */
     public static List<ServerInfo> parseServerList(String jsonString) {
         List<ServerInfo> serverList = new ArrayList<>();
         if (jsonString == null || jsonString.trim().isEmpty()) {

@@ -23,6 +23,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+/**
+ * The biggest class, represent the main chat logic
+ * Recommend do code refactor
+ */
 public class Chat {
 
     private final String discoveryUrl;
@@ -48,7 +52,11 @@ public class Chat {
     private BufferedReader directReader;
     private Thread directReceiverThread;
 
-
+    /**
+     * The Chat class constructor with validations
+     * @param discoveryUrl URL where the discover server is (RaquelAPI)
+     * @param relayUrl URL where the relay server is (RaquelAPI)
+     */
     public Chat(String discoveryUrl, String relayUrl) {
         // Ensure URLs don't end with '/'
         this.discoveryUrl = discoveryUrl.endsWith("/") ? discoveryUrl.substring(0, discoveryUrl.length() - 1) : discoveryUrl;
@@ -73,10 +81,17 @@ public class Chat {
 
     // --- Core Actions Initiated by Controller ---
 
+    /**
+     * Set the user's chosen nickname
+     * @param nickname Represents the nickname
+     */
     public void setNickname(String nickname) {
         this.currentNickname.set(nickname.trim());
     }
 
+    /**
+     * Here we get the JSON data (available servers) from the discovery service
+     */
     public void fetchServerList() {
         networkExecutor.submit(() -> {
             updateStatus("Fetching server list...");
@@ -108,6 +123,11 @@ public class Chat {
         });
     }
 
+    /**
+     * Server connection logic
+     * @param server represents the ServerInfo object (the Record)
+     * @param nickname User's nickname
+     */
     public void connectToServer(ServerInfo server, String nickname) {
         if (connected.get()) {
             addChatMessage("[System] Already connected. Disconnect first.");
@@ -182,6 +202,10 @@ public class Chat {
         });
     }
 
+    /**
+     * Send message to server - logic
+     * @param message Represents the message sent by user
+     */
     public void sendMessage(String message) {
         if (!connected.get() || message == null || message.trim().isEmpty()) {
             // Maybe show a subtle error, or just ignore empty sends
@@ -206,6 +230,10 @@ public class Chat {
         }
     }
 
+    /**
+     * Server disconnection logic
+     * While sending a control message to the server to handle disconnection
+     */
     public void disconnect() {
         if (!connected.get()) return;
 
@@ -225,6 +253,9 @@ public class Chat {
         resetConnectionStateInternal(true); // Full reset with disconnect message
     }
 
+    /**
+     * Controlled shutdown of program, avoid leaving orphaned processes
+     */
     public void shutdown() {
         updateStatus("Shutting down...");
         disconnect(); // Ensure clean disconnect if connected
@@ -253,6 +284,14 @@ public class Chat {
         Platform.runLater(() -> chatMessages.add(message));
     }
 
+    /**
+     * Helper method, handling network error
+     * Notify user
+     *
+     * @param context The error
+     * @param details Explanation
+     * @param t Represents the exception to be throwable by JVM
+     */
     private void handleNetworkError(String context, String details, Throwable t) {
         String errorMsg = "[Error] " + context + ": " + details;
         System.err.println(errorMsg);
@@ -266,6 +305,12 @@ public class Chat {
         });
     }
 
+    /**
+     * Handle the Connection Reset events
+     * Needs refactoring
+     *
+     * @param showDisconnectMessage The message to be notified to user
+     */
     private void resetConnectionStateInternal(boolean showDisconnectMessage) {
         // Run on FX thread to ensure property updates are safe
         Platform.runLater(() -> {
@@ -295,6 +340,14 @@ public class Chat {
 
     // --- Direct Connection Logic ---
 
+    /**
+     * Tries the best connection type, direct connection
+     * If fails, fallback
+     *
+     * @param server Represents the ServerInfo to be connected
+     * @param nickname Represents user's nickname
+     * @return True if it's possible, False it isn't possible
+     */
     private boolean attemptDirectConnection(ServerInfo server, String nickname) {
         try {
             directSocket = new Socket();
@@ -344,6 +397,9 @@ public class Chat {
         }
     }
 
+    /**
+     * If direct connection can be started, create a new thread and handle the Direct Receiver
+     */
     private void startDirectReceiverThread() {
         // Ensure previous thread is stopped if any
         if (directReceiverThread != null && directReceiverThread.isAlive()) {
@@ -388,6 +444,10 @@ public class Chat {
         addChatMessage("[System] Direct message listener started.");
     }
 
+    /**
+     * Logic to send a message by direct method
+     * @param message Represents the message data
+     */
     private void sendDirectMessage(String message) {
         // Run send operation in background to avoid blocking UI thread
         networkExecutor.submit(() -> {
@@ -412,6 +472,9 @@ public class Chat {
         });
     }
 
+    /**
+     * When direct connection ends, free resources, polite to JVM
+     */
     private void closeDirectConnectionResources() {
         // Stop the receiver thread first
         if (directReceiverThread != null && directReceiverThread.isAlive()) {
@@ -439,6 +502,13 @@ public class Chat {
 
     // --- Relay Connection Logic ---
 
+    /**
+     * If relay method, send a Handshake to notify the server to start a connection using relay
+     *
+     * @param server Represents the endpoint, in this case the server
+     * @param nickname Represents user's nickname
+     * @return True if servers answers, False if timeout
+     */
     private boolean attemptRelayHandshake(ServerInfo server, String nickname) {
         // This whole process involves waiting, so run it off the FX thread,
         // but it was already called within an executor task in connectToServer.
@@ -502,6 +572,9 @@ public class Chat {
         return false; // Timeout
     }
 
+    /**
+     * If connection was made, start the polling, get data from relay
+     */
     private void startRelayPolling() {
         stopRelayPolling(); // Ensure any previous poller is stopped
 
@@ -547,6 +620,10 @@ public class Chat {
         addChatMessage("[System] Relay message polling started.");
     }
 
+    /**
+     * If relay has messages, process them
+     * @param dto Process JSON message (Represents DTO logic)
+     */
     private void processIncomingRelayMessage(RelayMessageDTO dto) {
         // Ensure we are still connected in relay mode before processing
         if (!connected.get() || currentMode.get() != ConnectionMode.RELAY) {
@@ -586,7 +663,11 @@ public class Chat {
     }
 
 
-    // Internal method for synchronous polling (used by handshake and poller thread)
+    /**
+     * Internal method for synchronous polling (used by handshake and poller thread)
+     *
+     * @return Returns the polled data
+     */
     private List<JSONObject> pollRelayMessagesInternal() {
         String encodedUuid;
         try {
@@ -637,6 +718,15 @@ public class Chat {
         }
     }
 
+    /**
+     * Send a message using Relayed method
+     *
+     * @param recipientUuid Represents the recipient of the server, the relay needs to know who
+     *                      will receive the message
+     *
+     * @param message Represents the message data
+     * @param type Represents what's this message for?, can be Control or Chat
+     */
     private void sendRelayMessage(String recipientUuid, String message, String type) {
         // Run send operation in background
         networkExecutor.submit(() -> {
@@ -652,7 +742,14 @@ public class Chat {
         });
     }
 
-    // Internal synchronous send method
+    /**
+     * Internal synchronous send method (Using relay method)
+     *
+     * @param recipientUuid Represents the recipient of the server
+     * @param message Represents the message data
+     * @param type Represents what's this message for?, can be Control or Chat
+     * @return True if OK, False if error
+     */
     private boolean sendRelayMessageInternal(String recipientUuid, String message, String type) {
         if (!connected.get() && !"control".equals(type)) { // Allow sending control messages like disconnect even if state slightly outdated
             System.err.println("Cannot send relay message, not connected.");
@@ -694,6 +791,9 @@ public class Chat {
         }
     }
 
+    /**
+     * Handle the Relay error, if it does not respond or if we cannot establish connection/answer
+     */
     private void handleRelayConnectionError() {
         // Only trigger reset if we are currently connected via relay
         if (connected.get() && currentMode.get() == ConnectionMode.RELAY) {
@@ -707,6 +807,9 @@ public class Chat {
     }
 
 
+    /**
+     * Free resources when we need to stop Polling from Relay method
+     */
     private void stopRelayPolling() {
         if (relayPollingExecutor != null && !relayPollingExecutor.isShutdown()) {
             relayPollingExecutor.shutdown();
