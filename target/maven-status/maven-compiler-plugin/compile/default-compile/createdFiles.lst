@@ -1,9 +1,0 @@
-com/unilabs/chatroom_clientfx/model/records/ServerInfo.class
-com/unilabs/chatroom_clientfx/model/Chat.class
-module-info.class
-com/unilabs/chatroom_clientfx/controller/ChatController$1.class
-com/unilabs/chatroom_clientfx/model/ConnectionMode.class
-com/unilabs/chatroom_clientfx/controller/ChatController.class
-com/unilabs/chatroom_clientfx/model/Chat$1.class
-com/unilabs/chatroom_clientfx/MainApp.class
-com/unilabs/chatroom_clientfx/model/dto/RelayMessageDTO.class
